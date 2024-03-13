@@ -1,0 +1,142 @@
+﻿Program.Sub.Preflight.Start
+
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+F.Intrinsic.Control.SetErrorHandler("Main_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+
+
+F.Intrinsic.Control.If(V.Caller.Hook,=,11210)
+	V.Passed.000202.Set("LC New")
+F.Intrinsic.Control.elseif(V.Caller.Hook,=,11420)
+	F.Intrinsic.Control.If(V.Passed.000013,=,"Labor")
+		F.Intrinsic.Control.If(V.Passed.000112,<>,"")
+			F.Intrinsic.Control.CallSub(Process)
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Main_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_5063_ER_LearningC.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.Debug.SetLA(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.Main.End
+
+Program.Sub.Process.Start
+F.Intrinsic.Control.SetErrorHandler("Process_Err")
+F.Intrinsic.Control.ClearErrors
+
+V.Local.sError.Declare(String)
+
+
+
+V.Local.sSql.Declare(String)
+V.Local.sSql2.Declare(String)
+V.Local.sOper.Declare(String)
+
+'Create/Open Connection
+F.ODBC.Connection!Conx.OpenConnection(V.Ambient.PDSN,V.Ambient.PUser,V.Ambient.PPass)
+F.Intrinsic.String.Build("Select OPERATION from OP_CODES WHERE LMO='L' AND MACHINE='{0}' AND OPERATION LIKE '1_____' ORDER BY OPERATION DESC",V.Passed.000112,V.Local.sSql)
+F.ODBC.Connection!Conx.OpenLocalRecordsetRO("rstGetLC",V.Local.sSql)
+F.Intrinsic.Control.If(V.ODBC.Conx!rstGetLC.EOF,=,True)
+	V.Local.sOper.Set("100000")
+F.Intrinsic.Control.Else
+	F.Intrinsic.Math.Add(V.ODBC.Conx!rstGetLC.FieldVal!OPERATION,1,V.Local.sOper)
+F.Intrinsic.Control.EndIf
+F.ODBC.Conx!rstGetLC.Close
+F.ODBC.Connection!Conx.OpenLocalRecordsetRW("rstSaveLC","SELECT * FROM OP_CODES")
+	F.ODBC.Conx!rstSaveLC.AddNew
+	F.ODBC.Conx!rstSaveLC.Set!LMO("L")
+	F.ODBC.Conx!rstSaveLC.Set!MACHINE(V.Passed.000112)
+	F.ODBC.Conx!rstSaveLC.Set!OPERATION(V.Local.sOper)
+	F.Intrinsic.Control.If(V.Passed.000116,=,"")
+		F.ODBC.Conx!rstSaveLC.Set!STANDARD_SETUP(0)
+	F.Intrinsic.Control.Else
+		F.ODBC.Conx!rstSaveLC.Set!STANDARD_SETUP(V.Passed.000116)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.Passed.000118,=,"")
+		F.ODBC.Conx!rstSaveLC.Set!STANDARD_RUNTIME(0)
+	F.Intrinsic.Control.Else
+		F.ODBC.Conx!rstSaveLC.Set!STANDARD_RUNTIME(V.Passed.000118)
+	F.Intrinsic.Control.EndIf
+	F.ODBC.Conx!rstSaveLC.Set!UNIT_MEASURE(V.Passed.000119)
+	F.Intrinsic.Control.If(V.Passed.000145,=,"")
+		F.ODBC.Conx!rstSaveLC.Set!FREQUENCY(0)
+	F.Intrinsic.Control.Else
+		F.ODBC.Conx!rstSaveLC.Set!FREQUENCY(V.Passed.000145)
+	F.Intrinsic.Control.EndIf
+	F.ODBC.Conx!rstSaveLC.Set!MULTIPLE(0)
+	F.Intrinsic.Control.If(V.Passed.000141,=,"")
+		F.ODBC.Conx!rstSaveLC.Set!OVERLAP(0)
+	F.Intrinsic.Control.Else
+		F.ODBC.Conx!rstSaveLC.Set!OVERLAP(V.Passed.000141)
+	F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.If(V.Passed.000142,=,"")
+		F.ODBC.Conx!rstSaveLC.Set!WC_FACTOR(0)
+	F.Intrinsic.Control.Else
+		F.ODBC.Conx!rstSaveLC.Set!WC_FACTOR(V.Passed.000142)
+	F.Intrinsic.Control.EndIf
+	F.ODBC.Conx!rstSaveLC.Set!CONVER_FACTOR(0)
+	F.ODBC.Conx!rstSaveLC.Set!FORMULA_N1(0)
+	F.ODBC.Conx!rstSaveLC.Set!FORMULA_N2(0)
+	F.ODBC.Conx!rstSaveLC.Set!FORMULA_N3(0)
+	F.ODBC.Conx!rstSaveLC.Set!FORMULA_N4(0)
+	F.ODBC.Conx!rstSaveLC.Set!FORMULA_N5(0)
+	F.ODBC.Conx!rstSaveLC.Set!FORMULA_N6(0)
+	F.ODBC.Conx!rstSaveLC.Set!FORMULA_N7(0)
+	F.ODBC.Conx!rstSaveLC.Set!STD_LEAD_TIME(0)
+	F.ODBC.Conx!rstSaveLC.Set!CREW_SIZE(0)
+	F.Intrinsic.String.Build("Select WC_NAME, STANDARD_COST FROM V_WORKCENTERS WHERE MACHINE='{0}'",V.Passed.000112,V.Local.sSql2)
+	F.ODBC.Connection!Conx.OpenLocalRecordsetRO("rstGetWC",V.Local.sSql2)
+	F.Intrinsic.Control.If(V.ODBC.Conx!rstGetWC.EOF,=,False)
+		F.ODBC.Conx!rstSaveLC.Set!DESCRIPTION(V.ODBC.Conx!rstGetWC.FieldVal!WC_NAME)
+		F.ODBC.Conx!rstSaveLC.Set!RATE(V.ODBC.Conx!rstGetWC.FieldVal!STANDARD_COST)
+		V.Passed.000114.Set(V.Local.sOper)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.String.Build("Select WC.WC_NAME, WC.STANDARD_COST FROM V_WORKCENTERS WC, V_WORKGROUP_HEAD WG WHERE WG.PROTOTYPE_WC=WC.MACHINE AND WG.WORK_GROUP='{0}'",V.Passed.000112,V.Local.sSql2)
+		F.ODBC.Connection!Conx.OpenLocalRecordsetRO("rstGetWG",V.Local.sSql2)
+		F.Intrinsic.Control.If(V.ODBC.Conx!rstGetWG.EOF,=,False)
+			F.ODBC.Conx!rstSaveLC.Set!DESCRIPTION(V.ODBC.Conx!rstGetWG.FieldVal!WC_NAME)
+			F.ODBC.Conx!rstSaveLC.Set!RATE(V.ODBC.Conx!rstGetWG.FieldVal!STANDARD_COST)
+			V.Passed.000114.Set(V.Local.sOper)
+		F.Intrinsic.Control.Else
+			F.Intrinsic.Control.End
+
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+	F.ODBC.Conx!rstGetWC.Close
+	F.ODBC.Conx!rstSaveLC.Update
+	F.Intrinsic.String.Build("WC: {0} ,  OpCode: {1}",V.Passed.000112,V.Local.sOper,V.Local.sSql)
+	F.Intrinsic.UI.Msgbox(V.Local.sSql,"New Op Code Value Created")
+F.ODBC.Conx!rstSaveLC.Close
+F.ODBC.Connection!Conx.Close
+
+
+
+
+F.Intrinsic.Control.ExitSub
+
+F.Intrinsic.Control.Label("Process_Err")
+F.Intrinsic.Control.If(V.Ambient.ErrorNumber,<>,0)
+	Function.Intrinsic.String.Concat("Project: GAB_5063_ER_LearningC.g2u",V.Ambient.Newline,V.Ambient.Newline,"Subroutine: ",V.Ambient.CurrentSubroutine,V.Ambient.NewLine,"Error Occurred ",V.Ambient.ErrorNumber," with description ",V.Ambient.ErrorDescription,V.Local.sError)
+	F.Intrinsic.Debug.SetLA(V.Local.sError)
+Function.Intrinsic.Control.EndIf
+Program.Sub.Process.End
+
+Program.Sub.Comments.Start
+${$0$}$Learning Curve$}$RRC$}$4/24/2018 10:25:12 AM$}$False
+${$1$}$$}$$}$2$}$11410$}$RES010A-SCRIPT-1-HOOK$}$4/24/2018 12:59:20 PM$}$(Program: RE0072; Screen: RES010A)
+${$1$}$$}$$}$1$}$11210$}$RES010A-POPULATE-HOOK$}$4/24/2018 12:59:01 PM$}$(Program: RE0072; Screen: RES010A)
+${$5$}$2.0.0.0$}$2
+${$6$}$mmelzer$}$20230214152303326$}$IKKvWkYkqvhECyltf8usOAohx+LvSHTpVjohhO6NcWoIKOcm8iUr+M/yjAzw8aw2IkC2dSmZI0o=
+Program.Sub.Comments.End
